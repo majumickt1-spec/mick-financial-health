@@ -211,19 +211,14 @@
     font-weight: 900;
     color: var(--gold);
     line-height: 1;
-    filter: blur(8px);
-    user-select: none;
     transition: filter .5s;
   }
-  .score-big.revealed { filter: none; }
   .score-grade-blur {
     font-size: 28px;
     font-weight: 800;
     color: #333;
-    filter: blur(6px);
     transition: filter .5s;
   }
-  .score-grade-blur.revealed { filter: none; }
   .unlock-msg {
     background: linear-gradient(135deg, #0a0a0a, #1a1a2e);
     color: var(--white);
@@ -576,17 +571,20 @@
 
     <div class="unlock-msg">
       <h3>🔓 解鎖你的完整財務診斷報告</h3>
-      <p>輸入 Email，立刻獲得：<br>
+      <p>輸入暱稱與 Email，立刻獲得：<br>
         ✅ 5大指標完整燈號分析<br>
-        ✅ 專屬財務診斷建議<br>
-        ✅ 未來90天行動清單<br>
+        ✅ 同年齡財務比較<br>
+        ✅ 專屬90天行動計畫<br>
         ✅ 米克大叔每週理財乾貨
       </p>
       <div class="email-form">
+        <input type="text" id="user-name" placeholder="你的暱稱（例：小明、阿志）"
+          style="width:100%;border:2px solid #333;border-radius:8px;padding:12px 14px;font-size:14px;font-family:inherit;background:#1a1a2e;color:#fff;margin-bottom:10px;">
         <div class="email-row">
           <input type="email" id="user-email" placeholder="輸入你的 Email">
           <button class="btn" style="margin-top:0;width:auto;padding:12px 18px;font-size:14px;" onclick="submitEmail()">解鎖報告 →</button>
         </div>
+        <p id="unlock-error" style="color:#ff6b6b;font-size:12px;margin-top:6px;display:none;">⚠️ 請填入暱稱與有效的 Email</p>
         <p class="privacy">🔒 不會發送垃圾信 · 隨時可取消訂閱</p>
       </div>
     </div>
@@ -851,15 +849,20 @@ function prepareUnlock() {
 }
 
 function submitEmail() {
-  const email = document.getElementById('user-email').value;
-  if (!email || !email.includes('@')) {
-    alert('請輸入有效的 Email');
+  const name  = document.getElementById('user-name').value.trim();
+  const email = document.getElementById('user-email').value.trim();
+  const errEl = document.getElementById('unlock-error');
+  if (!name || !email || !email.includes('@')) {
+    errEl.style.display = 'block';
     return;
   }
+  errEl.style.display = 'none';
+  data.userName = name;
+
   // Submit to Mailchimp
   document.getElementById('mc-email').value = email;
-  // Uncomment below when Mailchimp URL is configured:
-  // document.getElementById('mc-form').submit();
+  document.getElementById('mc-fname').value = name;
+  // document.getElementById('mc-form').submit(); // uncomment when URL set
 
   showReport();
 }
@@ -876,8 +879,9 @@ function renderReport() {
 
   document.getElementById('report-score').textContent = r.scores.total;
   document.getElementById('report-grade').textContent = r.grade;
+  const userName = d.userName ? d.userName + ' 的' : '';
   document.getElementById('report-date').textContent =
-    new Date().toLocaleDateString('zh-TW') + ' 財務體檢';
+    userName + new Date().toLocaleDateString('zh-TW') + ' 財務體檢報告';
 
   // FIRE bar
   setTimeout(() => {
