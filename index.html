@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>米克大叔家庭財務健康檢查系統</title>
+<style>
+  :root {
+    --black: #111;
+    --gold: #D4A017;
+    --gold2: #FFD700;
+    --white: #fff;
+    --gray-bg: #f8f8f8;
+    --red: #C0392B;
+    --yellow: #E67E22;
+    --green: #27AE60;
+    --red-bg: #FDEDEC;
+    --yel-bg: #FEF9E7;
+    --grn-bg: #EAFAF1;
+    --blue: #1A5276;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
+    background: var(--gray-bg);
+    color: var(--black);
+    min-height: 100vh;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%);
+    color: var(--white);
+    text-align: center;
+    padding: 48px 20px 40px;
+  }
+  .hero-badge {
+    display: inline-block;
+    background: rgba(212,160,23,0.15);
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    font-size: 12px;
+    letter-spacing: 2px;
+    padding: 6px 16px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+  }
+  .hero h1 {
+    font-size: clamp(22px, 5vw, 36px);
+    font-weight: 900;
+    color: var(--gold2);
+    line-height: 1.3;
+    margin-bottom: 12px;
+  }
+  .hero p {
+    font-size: 15px;
+    color: #bbb;
+    max-width: 480px;
+    margin: 0 auto 28px;
+    line-height: 1.7;
+  }
+  .hero-stats {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+  }
+  .hero-stat { text-align: center; }
+  .hero-stat .num { font-size: 28px; font-weight: 900; color: var(--gold2); }
+  .hero-stat .lbl { font-size: 12px; color: #999; margin-top: 2px; }
+
+  /* ── STEP INDICATOR ── */
+  .steps-bar {
+    background: var(--white);
+    padding: 16px 20px;
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    border-bottom: 1px solid #eee;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+  }
+  .step-dot {
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+    color: #bbb;
+    font-weight: 600;
+  }
+  .step-dot .dot {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: #eee;
+    color: #bbb;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700;
+    margin-right: 6px;
+    transition: all .3s;
+  }
+  .step-dot.active .dot { background: var(--gold); color: #000; }
+  .step-dot.done .dot { background: var(--green); color: #fff; }
+  .step-dot.active { color: var(--black); }
+  .step-dot.done { color: var(--green); }
+  .step-line {
+    width: 28px; height: 2px;
+    background: #eee; margin: 0 4px;
+    align-self: center;
+    transition: background .3s;
+  }
+  .step-line.done { background: var(--green); }
+
+  /* ── CARD ── */
+  .card {
+    max-width: 640px;
+    margin: 32px auto;
+    background: var(--white);
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0,0,0,.08);
+    overflow: hidden;
+    display: none;
+  }
+  .card.active { display: block; }
+  .card-header {
+    background: var(--black);
+    color: var(--gold2);
+    padding: 20px 28px;
+  }
+  .card-header h2 { font-size: 20px; font-weight: 800; }
+  .card-header p { font-size: 13px; color: #aaa; margin-top: 4px; }
+  .card-body { padding: 28px; }
+
+  /* ── FORM ── */
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 480px) { .form-grid { grid-template-columns: 1fr; } }
+
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #444;
+  }
+  .field .hint { font-size: 11px; color: #999; }
+  .field input {
+    border: 2px solid #eee;
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 15px;
+    font-family: inherit;
+    transition: border .2s;
+    width: 100%;
+  }
+  .field input:focus { outline: none; border-color: var(--gold); }
+  .field input.error { border-color: var(--red); }
+
+  .btn {
+    display: block;
+    width: 100%;
+    padding: 16px;
+    background: var(--gold);
+    color: var(--black);
+    font-size: 16px;
+    font-weight: 800;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-top: 24px;
+    transition: transform .15s, background .2s;
+    letter-spacing: .5px;
+  }
+  .btn:hover { background: var(--gold2); transform: translateY(-1px); }
+  .btn:active { transform: translateY(0); }
+  .btn-secondary {
+    background: #111;
+    color: var(--gold2);
+    margin-top: 12px;
+  }
+  .btn-secondary:hover { background: #222; }
+
+  /* ── LOADING ── */
+  #step-loading .card-body {
+    text-align: center;
+    padding: 60px 28px;
+  }
+  .spinner {
+    width: 64px; height: 64px;
+    border: 6px solid #eee;
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 24px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-msg { font-size: 15px; color: #666; line-height: 1.8; }
+
+  /* ── SCORE PREVIEW ── */
+  .score-blur {
+    text-align: center;
+    padding: 20px 0 8px;
+  }
+  .score-big {
+    font-size: 80px;
+    font-weight: 900;
+    color: var(--gold);
+    line-height: 1;
+    filter: blur(8px);
+    user-select: none;
+    transition: filter .5s;
+  }
+  .score-big.revealed { filter: none; }
+  .score-grade-blur {
+    font-size: 28px;
+    font-weight: 800;
+    color: #333;
+    filter: blur(6px);
+    transition: filter .5s;
+  }
+  .score-grade-blur.revealed { filter: none; }
+  .unlock-msg {
+    background: linear-gradient(135deg, #0a0a0a, #1a1a2e);
+    color: var(--white);
+    border-radius: 12px;
+    padding: 24px;
+    margin: 20px 0;
+    text-align: center;
+  }
+  .unlock-msg h3 { color: var(--gold2); font-size: 18px; margin-bottom: 8px; }
+  .unlock-msg p { font-size: 13px; color: #bbb; line-height: 1.6; }
+
+  .email-form { margin-top: 16px; }
+  .email-row { display: flex; gap: 10px; }
+  .email-row input {
+    flex: 1;
+    border: 2px solid #eee;
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 14px;
+    font-family: inherit;
+  }
+  .email-row input:focus { outline: none; border-color: var(--gold); }
+  .email-row .btn { margin-top: 0; width: auto; padding: 12px 20px; font-size: 14px; }
+  .privacy { font-size: 11px; color: #999; text-align: center; margin-top: 8px; }
+
+  /* ── REPORT ── */
+  .report-header {
+    background: linear-gradient(135deg, #0a0a0a, #1a1a2e);
+    color: var(--white);
+    text-align: center;
+    padding: 32px 28px;
+  }
+  .report-score { font-size: 72px; font-weight: 900; color: var(--gold2); line-height: 1; }
+  .report-grade { font-size: 24px; font-weight: 700; color: var(--white); margin-top: 6px; }
+  .report-date { font-size: 12px; color: #888; margin-top: 8px; }
+
+  .section-title {
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--white);
+    background: #222;
+    padding: 10px 16px;
+    margin: 0 -28px 16px;
+    letter-spacing: 1px;
+  }
+  /* first section-title inside card-body doesn't need negative margin trick */
+  .card-body .section-title:first-child { margin-top: 0; }
+
+  /* ── METRIC GRID ── */
+  .metric-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  @media(max-width:480px){ .metric-grid { grid-template-columns: 1fr; } }
+
+  .metric-box {
+    border-radius: 10px;
+    padding: 16px;
+    border: 1px solid #eee;
+  }
+  .metric-box .m-label { font-size: 12px; color: #888; margin-bottom: 4px; }
+  .metric-box .m-value { font-size: 26px; font-weight: 900; }
+  .metric-box .m-status { font-size: 12px; margin-top: 4px; font-weight: 600; }
+  .metric-box.red { background: var(--red-bg); border-color: #f5b7b1; }
+  .metric-box.red .m-value { color: var(--red); }
+  .metric-box.yellow { background: var(--yel-bg); border-color: #f8d7a0; }
+  .metric-box.yellow .m-value { color: var(--yellow); }
+  .metric-box.green { background: var(--grn-bg); border-color: #a9dfbf; }
+  .metric-box.green .m-value { color: var(--green); }
+
+  /* ── DIAG ROWS ── */
+  .diag-row {
+    display: flex;
+    gap: 12px;
+    padding: 14px 0;
+    border-bottom: 1px solid #f0f0f0;
+    align-items: flex-start;
+  }
+  .diag-row:last-child { border-bottom: none; }
+  .diag-icon { font-size: 20px; flex-shrink: 0; width: 28px; text-align: center; }
+  .diag-content .diag-title { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+  .diag-content .diag-desc { font-size: 12px; color: #555; line-height: 1.6; }
+
+  /* ── TASKS ── */
+  .task-list { display: flex; flex-direction: column; gap: 10px; }
+  .task-item {
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.5;
+    border-left: 4px solid;
+  }
+  .task-item.t1 { background: #EBF5FB; border-color: #1A5276; color: #1A5276; }
+  .task-item.t2 { background: var(--yel-bg); border-color: var(--yellow); color: #7D4E00; }
+  .task-item.t3 { background: var(--grn-bg); border-color: var(--green); color: #1D6A3A; }
+
+  /* ── FUNNEL ── */
+  .funnel-section {
+    background: linear-gradient(135deg, #0a0a0a, #1a1a2e);
+    color: var(--white);
+    padding: 32px 28px;
+    border-radius: 16px;
+    max-width: 640px;
+    margin: 0 auto 32px;
+    box-shadow: 0 4px 24px rgba(0,0,0,.12);
+  }
+  .funnel-section h3 { color: var(--gold2); font-size: 18px; margin-bottom: 20px; text-align: center; }
+
+  .product-card {
+    background: rgba(255,255,255,.05);
+    border: 1px solid rgba(212,160,23,.3);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: background .2s;
+  }
+  .product-card:hover { background: rgba(212,160,23,.08); }
+  .product-icon { font-size: 32px; flex-shrink: 0; }
+  .product-info { flex: 1; }
+  .product-info .p-title { font-size: 15px; font-weight: 700; color: var(--white); }
+  .product-info .p-desc { font-size: 12px; color: #aaa; margin-top: 3px; line-height: 1.5; }
+  .product-price {
+    text-align: right; flex-shrink: 0;
+  }
+  .product-price .price { font-size: 20px; font-weight: 900; color: var(--gold2); }
+  .product-price .unit { font-size: 11px; color: #888; }
+  .product-price .btn-buy {
+    display: block;
+    margin-top: 6px;
+    padding: 7px 14px;
+    background: var(--gold);
+    color: #000;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+    text-align: center;
+    cursor: pointer;
+    border: none;
+    transition: background .2s;
+  }
+  .product-price .btn-buy:hover { background: var(--gold2); }
+
+  .share-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  .share-btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: opacity .2s;
+  }
+  .share-btn:hover { opacity: .85; }
+  .share-fb { background: #1877F2; color: #fff; }
+  .share-line { background: #06C755; color: #fff; }
+  .share-copy { background: #444; color: #fff; }
+
+  /* ── FOOTER ── */
+  .footer {
+    text-align: center;
+    padding: 24px;
+    font-size: 12px;
+    color: #aaa;
+    line-height: 1.8;
+  }
+  .footer strong { color: #666; }
+
+  /* ── PROGRESS BAR ── */
+  .progress-bar-wrap {
+    background: #eee;
+    border-radius: 4px;
+    height: 6px;
+    margin: 12px 0 0;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--gold), var(--gold2));
+    transition: width 1s ease;
+  }
+
+  /* ── SCORE BREAKDOWN ── */
+  .score-breakdown {
+    margin: 16px 0;
+  }
+  .breakdown-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    font-size: 13px;
+  }
+  .breakdown-row .b-label { width: 120px; flex-shrink: 0; font-weight: 600; }
+  .breakdown-row .b-bar-wrap { flex: 1; background: #eee; border-radius: 4px; height: 8px; }
+  .breakdown-row .b-bar { height: 100%; border-radius: 4px; transition: width 1s ease; }
+  .breakdown-row .b-score { width: 50px; text-align: right; font-weight: 700; }
+  .b-bar.red-bar { background: var(--red); }
+  .b-bar.yel-bar { background: var(--yellow); }
+  .b-bar.grn-bar { background: var(--green); }
+
+  .tag-safe { display: inline-block; background: var(--green); color: #fff; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; }
+  .tag-warn { display: inline-block; background: var(--yellow); color: #fff; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; }
+  .tag-risk { display: inline-block; background: var(--red); color: #fff; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge">免費・3分鐘・完整報告</div>
+  <h1>米克大叔<br>家庭財務健康檢查系統</h1>
+  <p>輸入6個數字，立刻得到你的家庭財務健康分數與專屬診斷報告——就像銀行財富管理部門的家庭財務診斷</p>
+  <div class="hero-stats">
+    <div class="hero-stat"><div class="num">100</div><div class="lbl">滿分制評分</div></div>
+    <div class="hero-stat"><div class="num">5</div><div class="lbl">大指標分析</div></div>
+    <div class="hero-stat"><div class="num">3</div><div class="lbl">分鐘完成</div></div>
+  </div>
+</div>
+
+<!-- STEP BAR -->
+<div class="steps-bar">
+  <div class="step-dot active" id="sd1"><div class="dot">1</div><span>填入數據</span></div>
+  <div class="step-line" id="sl1"></div>
+  <div class="step-dot" id="sd2"><div class="dot">2</div><span>分析中</span></div>
+  <div class="step-line" id="sl2"></div>
+  <div class="step-dot" id="sd3"><div class="dot">3</div><span>解鎖報告</span></div>
+  <div class="step-line" id="sl3"></div>
+  <div class="step-dot" id="sd4"><div class="dot">4</div><span>完整報告</span></div>
+</div>
+
+<!-- STEP 1: 輸入數據 -->
+<div id="step-input" class="card active">
+  <div class="card-header">
+    <h2>📋 填入你的家庭財務數字</h2>
+    <p>所有數據僅在你的瀏覽器內計算，不會上傳任何伺服器</p>
+  </div>
+  <div class="card-body">
+    <div class="form-grid">
+      <div class="field">
+        <label>💰 每月主動收入（元）</label>
+        <span class="hint">薪水、兼職、業務收入</span>
+        <input type="number" id="income_active" placeholder="例：72000" min="0">
+      </div>
+      <div class="field">
+        <label>🌊 每月被動收入（元）</label>
+        <span class="hint">股息、租金、版稅、系統收入</span>
+        <input type="number" id="income_passive" placeholder="例：21000" min="0">
+      </div>
+      <div class="field">
+        <label>📤 每月總支出（元）</label>
+        <span class="hint">固定+生活+負債還款</span>
+        <input type="number" id="expense_total" placeholder="例：68500" min="0">
+      </div>
+      <div class="field">
+        <label>🛡️ 緊急預備金（元）</label>
+        <span class="hint">活存、定存中的緊急備用金</span>
+        <input type="number" id="emergency_fund" placeholder="例：100000" min="0">
+      </div>
+      <div class="field">
+        <label>🏦 總資產（元）</label>
+        <span class="hint">存款+投資+房產市值</span>
+        <input type="number" id="total_assets" placeholder="例：8000000" min="0">
+      </div>
+      <div class="field">
+        <label>💳 總負債（元）</label>
+        <span class="hint">房貸+車貸+信貸+信用卡</span>
+        <input type="number" id="total_liabilities" placeholder="例：5600000" min="0">
+      </div>
+    </div>
+    <p id="form-error" style="color:var(--red);font-size:13px;margin-top:12px;display:none;">⚠️ 請填入所有欄位（可填 0）</p>
+    <button class="btn" onclick="startAnalysis()">🔍 開始財務健康分析 →</button>
+    <p style="font-size:11px;color:#aaa;text-align:center;margin-top:12px;">🔒 資料只在本機計算，完全保護隱私</p>
+  </div>
+</div>
+
+<!-- STEP 2: 分析中 -->
+<div id="step-loading" class="card">
+  <div class="card-body">
+    <div class="spinner"></div>
+    <div class="loading-msg" id="loading-msg">正在分析你的家庭財務結構...</div>
+    <div class="progress-bar-wrap" style="max-width:300px;margin:20px auto 0;">
+      <div class="progress-bar-fill" id="loading-bar" style="width:0%"></div>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 3: 解鎖報告 -->
+<div id="step-unlock" class="card">
+  <div class="card-header">
+    <h2>🎯 分析完成！</h2>
+    <p>你的財務健康分數已計算完成，留下 Email 解鎖完整報告</p>
+  </div>
+  <div class="card-body">
+    <div class="score-blur">
+      <div class="score-big" id="score-preview">--</div>
+      <div style="font-size:13px;color:#999;margin-top:4px;">分（滿分100）</div>
+      <div class="score-grade-blur" id="grade-preview" style="margin-top:8px;">-- 級</div>
+    </div>
+
+    <div class="unlock-msg">
+      <h3>🔓 解鎖你的完整財務診斷報告</h3>
+      <p>輸入 Email，立刻獲得：<br>
+        ✅ 5大指標完整燈號分析<br>
+        ✅ 專屬財務診斷建議<br>
+        ✅ 未來90天行動清單<br>
+        ✅ 米克大叔每週理財乾貨
+      </p>
+      <div class="email-form">
+        <div class="email-row">
+          <input type="email" id="user-email" placeholder="輸入你的 Email">
+          <button class="btn" style="margin-top:0;width:auto;padding:12px 18px;font-size:14px;" onclick="submitEmail()">解鎖報告 →</button>
+        </div>
+        <p class="privacy">🔒 不會發送垃圾信 · 隨時可取消訂閱</p>
+      </div>
+    </div>
+
+    <button class="btn btn-secondary" onclick="showReport()" style="font-size:13px;">暫時跳過，直接看報告</button>
+  </div>
+</div>
+
+<!-- STEP 4: 完整報告 -->
+<div id="step-report" class="card">
+  <div class="report-header">
+    <div style="font-size:13px;color:var(--gold);letter-spacing:1px;margin-bottom:8px;">米克大叔家庭財務健康檢查系統</div>
+    <div class="report-score" id="report-score">--</div>
+    <div style="font-size:14px;color:#bbb;margin-top:4px;">分（滿分100）</div>
+    <div class="report-grade" id="report-grade">-- 級</div>
+    <div class="report-date" id="report-date"></div>
+  </div>
+
+  <div class="card-body">
+    <div class="section-title">📊 五大指標總覽</div>
+    <div class="metric-grid" id="metric-grid">
+      <!-- filled by JS -->
+    </div>
+
+    <div class="section-title" style="margin-top:8px;">📈 評分明細</div>
+    <div class="score-breakdown" id="score-breakdown">
+      <!-- filled by JS -->
+    </div>
+
+    <div class="section-title" style="margin-top:8px;">🔬 專屬財務診斷</div>
+    <div class="diag-list" id="diag-list">
+      <!-- filled by JS -->
+    </div>
+
+    <div class="section-title" style="margin-top:8px;">🚀 未來90天優先任務</div>
+    <div class="task-list" id="task-list">
+      <!-- filled by JS -->
+    </div>
+
+    <div class="progress-bar-wrap" style="margin:20px 0 8px;">
+      <div class="progress-bar-fill" id="fire-bar" style="width:0%"></div>
+    </div>
+    <div style="font-size:12px;color:#888;text-align:center;" id="fire-label">FIRE 進度計算中...</div>
+
+    <div style="display:flex;gap:10px;margin-top:20px;">
+      <button class="btn" style="margin-top:0;" onclick="scrollToFunnel()">📦 查看推薦工具與課程 →</button>
+    </div>
+    <div class="share-row">
+      <button class="share-btn share-fb" onclick="shareResult('fb')">分享 Facebook</button>
+      <button class="share-btn share-line" onclick="shareResult('line')">分享 LINE</button>
+      <button class="share-btn share-copy" onclick="copyResult()">複製結果</button>
+    </div>
+  </div>
+</div>
+
+<!-- FUNNEL -->
+<div class="funnel-section" id="funnel" style="display:none;">
+  <h3>🎁 根據你的分析結果，米克大叔推薦</h3>
+
+  <div class="product-card">
+    <div class="product-icon">📊</div>
+    <div class="product-info">
+      <div class="p-title">家庭財務健康工具包 4.0</div>
+      <div class="p-desc">完整版 Excel 系統・7大工作表・自動計算安全天數、FIRE進度、財務健康分數・一次購買終身使用</div>
+    </div>
+    <div class="product-price">
+      <div class="price">$499</div>
+      <div class="unit">一次性</div>
+      <a href="#" class="btn-buy" onclick="trackClick('499')">立即取得</a>
+    </div>
+  </div>
+
+  <div class="product-card">
+    <div class="product-icon">🎓</div>
+    <div class="product-info">
+      <div class="p-title">新手財富執行力課程</div>
+      <div class="p-desc">12週影片課程・從月光族到建立現金流系統・管理收支・減少負債・增加資產</div>
+    </div>
+    <div class="product-price">
+      <div class="price">$2,980</div>
+      <div class="unit">線上課程</div>
+      <a href="#" class="btn-buy" onclick="trackClick('2980')">了解更多</a>
+    </div>
+  </div>
+
+  <div class="product-card">
+    <div class="product-icon">🎲</div>
+    <div class="product-info">
+      <div class="p-title">現金流桌遊財務訓練（12次）</div>
+      <div class="p-desc">透過富爸爸現金流桌遊，12次實戰演練・學會識別資產與負債・體驗快車道思維・從遊戲中內化財務自由觀念</div>
+    </div>
+    <div class="product-price">
+      <div class="price">$2,990</div>
+      <div class="unit">12次課程</div>
+      <a href="#" class="btn-buy" onclick="trackClick('2990')">預約健診</a>
+    </div>
+  </div>
+
+  <p style="text-align:center;font-size:12px;color:#666;margin-top:12px;">
+    📺 訂閱 <strong style="color:var(--gold2);">40才米克大叔的理財之路</strong> 每週免費理財乾貨
+  </p>
+</div>
+
+<div class="footer">
+  <strong>米克大叔家庭財務健康檢查系統</strong><br>
+  用資產負債表，管理收支・減少負債・增加資產，一步步打造專屬現金流<br>
+  40才米克大叔的理財之路 · 台灣上班族家庭財務顧問
+</div>
+
+<!-- Hidden Mailchimp form -->
+<form id="mc-form" action="https://YOUR-MAILCHIMP-ACTION-URL" method="post" target="_blank" style="display:none;">
+  <input type="email" name="EMAIL" id="mc-email">
+  <input type="text" name="FNAME" id="mc-fname" value="財務健康測驗用戶">
+  <!-- Replace ACTION URL with your Mailchimp form action URL -->
+</form>
+
+<script>
+// ── 全域資料 ──
+let data = {};
+let results = {};
+
+// ── 計算邏輯 ──
+function calculate(d) {
+  const cashflow    = (d.income_active + d.income_passive) - d.expense_total;
+  const savings_rate = d.expense_total > 0 ? cashflow / (d.income_active + d.income_passive) : 0;
+  const safe_days   = d.expense_total > 0 ? (d.emergency_fund / (d.expense_total / 30)) : 0;
+  const passive_cov = d.expense_total > 0 ? d.income_passive / d.expense_total : 0;
+  const debt_ratio  = d.total_assets > 0   ? d.total_liabilities / d.total_assets : 1;
+  const net_worth   = d.total_assets - d.total_liabilities;
+  const fire_target = d.expense_total * 12 * 25;
+  const fire_pct    = fire_target > 0 ? Math.max(net_worth, 0) / fire_target : 0;
+
+  // 評分（共100分）
+  let s_cashflow = cashflow > 0 ? 20 : (cashflow > -3000 ? 10 : 0);
+  let s_safe     = safe_days >= 90 ? 20 : (safe_days >= 30 ? 12 : 0);
+  let s_savings  = savings_rate >= 0.2 ? 15 : (savings_rate >= 0.1 ? 8 : 0);
+  let s_debt     = debt_ratio <= 0.5 ? 20 : (debt_ratio <= 0.7 ? 12 : 0);
+  let s_passive  = passive_cov >= 0.5 ? 25 : (passive_cov >= 0.25 ? 15 : (passive_cov > 0 ? 8 : 0));
+  let total = s_cashflow + s_safe + s_savings + s_debt + s_passive;
+
+  const grade = total >= 90 ? 'A+ 🏆' : total >= 80 ? 'A 🟢' :
+                total >= 70 ? 'B+ 🟢' : total >= 60 ? 'B 🟡' :
+                total >= 50 ? 'C+ 🟡' : total >= 40 ? 'C 🔴' : 'D 🔴';
+
+  return { cashflow, savings_rate, safe_days, passive_cov, debt_ratio,
+           net_worth, fire_target, fire_pct,
+           scores: { cashflow: s_cashflow, safe: s_safe, savings: s_savings,
+                     debt: s_debt, passive: s_passive, total },
+           grade };
+}
+
+function fmtMoney(n) {
+  if (Math.abs(n) >= 1e8) return (n/1e8).toFixed(1) + '億';
+  if (Math.abs(n) >= 1e4) return (n/1e4).toFixed(0) + '萬';
+  return n.toLocaleString();
+}
+function fmtPct(n) { return (n * 100).toFixed(1) + '%'; }
+function fmtDays(n) { return Math.round(n) + '天'; }
+
+// ── Step 1 → 開始分析 ──
+function startAnalysis() {
+  const ids = ['income_active','income_passive','expense_total',
+               'emergency_fund','total_assets','total_liabilities'];
+  let valid = true;
+  ids.forEach(id => {
+    const v = document.getElementById(id).value;
+    if (v === '') valid = false;
+  });
+  if (!valid) {
+    document.getElementById('form-error').style.display = 'block';
+    return;
+  }
+  document.getElementById('form-error').style.display = 'none';
+
+  data = {
+    income_active:    +document.getElementById('income_active').value,
+    income_passive:   +document.getElementById('income_passive').value,
+    expense_total:    +document.getElementById('expense_total').value,
+    emergency_fund:   +document.getElementById('emergency_fund').value,
+    total_assets:     +document.getElementById('total_assets').value,
+    total_liabilities:+document.getElementById('total_liabilities').value,
+  };
+  results = calculate(data);
+
+  goStep(2);
+  animateLoading();
+}
+
+// ── Loading animation ──
+function animateLoading() {
+  const msgs = [
+    '正在計算安全天數...',
+    '分析被動收入覆蓋率...',
+    '評估負債比例...',
+    '計算 FIRE 財務自由進度...',
+    '生成專屬診斷報告...',
+    '完成！'
+  ];
+  let i = 0;
+  const bar = document.getElementById('loading-bar');
+  const msg = document.getElementById('loading-msg');
+  const timer = setInterval(() => {
+    if (i < msgs.length) {
+      msg.textContent = msgs[i];
+      bar.style.width = ((i + 1) / msgs.length * 100) + '%';
+      i++;
+    } else {
+      clearInterval(timer);
+      setTimeout(() => {
+        goStep(3);
+        prepareUnlock();
+      }, 400);
+    }
+  }, 400);
+}
+
+// ── Unlock step ──
+function prepareUnlock() {
+  document.getElementById('score-preview').textContent = results.scores.total;
+  document.getElementById('grade-preview').textContent = results.grade;
+}
+
+function submitEmail() {
+  const email = document.getElementById('user-email').value;
+  if (!email || !email.includes('@')) {
+    alert('請輸入有效的 Email');
+    return;
+  }
+  // Submit to Mailchimp
+  document.getElementById('mc-email').value = email;
+  // Uncomment below when Mailchimp URL is configured:
+  // document.getElementById('mc-form').submit();
+
+  showReport();
+}
+
+function showReport() {
+  goStep(4);
+  renderReport();
+}
+
+// ── Render report ──
+function renderReport() {
+  const r = results;
+  const d = data;
+
+  document.getElementById('report-score').textContent = r.scores.total;
+  document.getElementById('report-grade').textContent = r.grade;
+  document.getElementById('report-date').textContent =
+    new Date().toLocaleDateString('zh-TW') + ' 財務體檢';
+
+  // FIRE bar
+  setTimeout(() => {
+    document.getElementById('fire-bar').style.width = Math.min(r.fire_pct * 100, 100) + '%';
+    document.getElementById('fire-label').textContent =
+      `FIRE 財務自由進度：${fmtPct(r.fire_pct)}（目標：${fmtMoney(r.fire_target)}元）`;
+  }, 500);
+
+  // Metric grid
+  const metrics = [
+    { label: '🛡️ 安全天數', value: fmtDays(r.safe_days),
+      status: r.safe_days >= 90 ? '相對安全' : r.safe_days >= 30 ? '需要加強' : '⚠️ 高度危險',
+      cls: r.safe_days >= 90 ? 'green' : r.safe_days >= 30 ? 'yellow' : 'red' },
+    { label: '🌊 被動收入覆蓋率', value: fmtPct(r.passive_cov),
+      status: r.passive_cov >= 0.5 ? '快車道進行中' : r.passive_cov >= 0.25 ? '繼續加強' : '亟需建立',
+      cls: r.passive_cov >= 0.5 ? 'green' : r.passive_cov >= 0.25 ? 'yellow' : 'red' },
+    { label: '💰 淨資產', value: fmtMoney(r.net_worth) + '元',
+      status: r.net_worth > 0 ? '資產大於負債' : '負債超過資產',
+      cls: r.net_worth > 0 ? 'green' : 'red' },
+    { label: '💳 負債比', value: fmtPct(r.debt_ratio),
+      status: r.debt_ratio <= 0.5 ? '健康' : r.debt_ratio <= 0.7 ? '偏高' : '過高',
+      cls: r.debt_ratio <= 0.5 ? 'green' : r.debt_ratio <= 0.7 ? 'yellow' : 'red' },
+    { label: '📈 月儲蓄率', value: fmtPct(r.savings_rate),
+      status: r.savings_rate >= 0.2 ? '達標' : r.savings_rate >= 0.1 ? '待加強' : '過低',
+      cls: r.savings_rate >= 0.2 ? 'green' : r.savings_rate >= 0.1 ? 'yellow' : 'red' },
+  ];
+  const grid = document.getElementById('metric-grid');
+  grid.innerHTML = metrics.map(m => `
+    <div class="metric-box ${m.cls}">
+      <div class="m-label">${m.label}</div>
+      <div class="m-value">${m.value}</div>
+      <div class="m-status">${m.status}</div>
+    </div>`).join('');
+
+  // Score breakdown
+  const breakdown = [
+    { label: '月現金流', score: r.scores.cashflow, max: 20 },
+    { label: '安全天數', score: r.scores.safe,     max: 20 },
+    { label: '儲蓄率',  score: r.scores.savings,   max: 15 },
+    { label: '負債比',  score: r.scores.debt,       max: 20 },
+    { label: '被動收入',score: r.scores.passive,    max: 25 },
+  ];
+  const sbEl = document.getElementById('score-breakdown');
+  sbEl.innerHTML = breakdown.map(b => {
+    const pct = b.max > 0 ? (b.score / b.max * 100) : 0;
+    const cls = pct >= 70 ? 'grn-bar' : pct >= 40 ? 'yel-bar' : 'red-bar';
+    return `<div class="breakdown-row">
+      <div class="b-label">${b.label}</div>
+      <div class="b-bar-wrap"><div class="b-bar ${cls}" style="width:${pct}%"></div></div>
+      <div class="b-score">${b.score}/${b.max}</div>
+    </div>`;
+  }).join('');
+
+  // Diag
+  const diags = [];
+  if (r.cashflow < 0)
+    diags.push({ icon: '🔴', title: '月現金流為負', desc: `每月支出超出收入 ${fmtMoney(Math.abs(r.cashflow))}元，資產正在被消耗。這是最緊急的財務警訊，必須立刻削減支出。` });
+  else
+    diags.push({ icon: '✅', title: '月現金流為正', desc: `每月結餘 ${fmtMoney(r.cashflow)}元，繼續維持並將結餘投入資產配置。` });
+
+  if (r.safe_days < 30)
+    diags.push({ icon: '🔴', title: `安全天數嚴重不足（${fmtDays(r.safe_days)}）`, desc: `緊急預備金僅能支撐${Math.round(r.safe_days)}天，建議停止非必要投資，優先累積30天預備金（目標：${fmtMoney(data.expense_total)}元）。` });
+  else if (r.safe_days < 90)
+    diags.push({ icon: '🟡', title: `安全天數待加強（${fmtDays(r.safe_days)}）`, desc: `已有初步緩衝，建議在12個月內達到90天以上（目標：${fmtMoney(data.expense_total * 3)}元）。` });
+  else
+    diags.push({ icon: '✅', title: `安全天數充足（${fmtDays(r.safe_days)}）`, desc: '緊急預備金充足，家庭財務具備基本韌性。' });
+
+  if (r.debt_ratio > 0.7)
+    diags.push({ icon: '🔴', title: `負債比過高（${fmtPct(r.debt_ratio)}）`, desc: '負債占資產超過70%，財務槓桿風險極高。建議優先清償高利率消費型負債（信用卡/信用貸款）。' });
+  else if (r.debt_ratio > 0.5)
+    diags.push({ icon: '🟡', title: `負債比偏高（${fmtPct(r.debt_ratio)}）`, desc: '負債比在50-70%，屬需注意區間。建議避免新增消費性負債，確保現金流為正。' });
+  else
+    diags.push({ icon: '✅', title: `負債比健康（${fmtPct(r.debt_ratio)}）`, desc: '負債結構健康，繼續維持，避免新增非必要負債。' });
+
+  if (r.passive_cov < 0.25)
+    diags.push({ icon: '🔴', title: `被動收入嚴重不足（${fmtPct(r.passive_cov)}）`, desc: '被動收入幾乎為零，完全依賴主動收入。建議從每月定期投資ETF開始，逐步建立股息型被動收入。' });
+  else if (r.passive_cov < 0.5)
+    diags.push({ icon: '🟡', title: `被動收入需要加強（${fmtPct(r.passive_cov)}）`, desc: `被動收入已有起步，但仍不足支出一半。建議加速ETF定期定額，目標覆蓋所有固定支出。` });
+  else
+    diags.push({ icon: '✅', title: `被動收入達標（${fmtPct(r.passive_cov)}）`, desc: '被動收入已超過支出50%，正在快車道上，繼續加強！' });
+
+  document.getElementById('diag-list').innerHTML = diags.map(dg =>
+    `<div class="diag-row">
+      <div class="diag-icon">${dg.icon}</div>
+      <div class="diag-content">
+        <div class="diag-title">${dg.title}</div>
+        <div class="diag-desc">${dg.desc}</div>
+      </div>
+    </div>`).join('');
+
+  // Tasks
+  const tasks = [];
+  if (r.cashflow < 0)
+    tasks.push({ cls: 't1', text: `① 🔴 每月現金流為負，立刻審視並削減每月支出，目標讓結餘 > 0` });
+  else if (r.safe_days < 30)
+    tasks.push({ cls: 't1', text: `① 🔴 安全天數僅${Math.round(r.safe_days)}天，優先累積1個月緊急預備金（目標：${fmtMoney(data.expense_total)}元）` });
+  else if (r.debt_ratio > 0.7)
+    tasks.push({ cls: 't1', text: `① 🔴 負債比${fmtPct(r.debt_ratio)}過高，優先清償高利率消費型負債（信用卡/信用貸款）` });
+  else
+    tasks.push({ cls: 't1', text: `① ✅ 現金流基礎穩定，持續維持正現金流並擴大儲蓄` });
+
+  if (r.safe_days < 90)
+    tasks.push({ cls: 't2', text: `② 建立90天緊急預備金（目標：${fmtMoney(data.expense_total * 3)}元），每月至少存入 ${fmtMoney(data.expense_total * 0.1)}元` });
+  else if (r.savings_rate < 0.2)
+    tasks.push({ cls: 't2', text: `② 提升儲蓄率至20%以上（每月至少 ${fmtMoney((data.income_active + data.income_passive) * 0.2)}元），執行「先儲蓄後消費」` });
+  else
+    tasks.push({ cls: 't2', text: `② ✅ 緊急預備金充足，將多餘現金流轉入投資帳戶加速資產累積` });
+
+  if (r.passive_cov < 0.25)
+    tasks.push({ cls: 't3', text: `③ 被動收入近乎為零，立刻開始ETF定期定額，建議每月投入 ${fmtMoney(Math.max(data.expense_total * 0.1, 3000))}元以上` });
+  else if (r.passive_cov < 0.5)
+    tasks.push({ cls: 't3', text: `③ 被動收入仍不足支出50%，加速ETF定期定額，目標覆蓋所有固定支出` });
+  else
+    tasks.push({ cls: 't3', text: `③ 🟢 被動收入達標！追蹤FIRE進度（目前${fmtPct(r.fire_pct)}），繼續向財務自由邁進` });
+
+  document.getElementById('task-list').innerHTML =
+    tasks.map(t => `<div class="task-item ${t.cls}">${t.text}</div>`).join('');
+
+  // Show funnel
+  document.getElementById('funnel').style.display = 'block';
+}
+
+// ── Step navigation ──
+function goStep(n) {
+  ['step-input','step-loading','step-unlock','step-report'].forEach((id, i) => {
+    document.getElementById(id).classList.toggle('active', i + 1 === n);
+  });
+  [1,2,3,4].forEach(i => {
+    const dot = document.getElementById('sd' + i);
+    const line = document.getElementById('sl' + i);
+    dot.className = 'step-dot' + (i === n ? ' active' : i < n ? ' done' : '');
+    if (line) line.className = 'step-line' + (i < n ? ' done' : '');
+  });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function scrollToFunnel() {
+  document.getElementById('funnel').scrollIntoView({ behavior: 'smooth' });
+}
+
+// ── Share ──
+function shareResult(platform) {
+  const r = results;
+  const text = `我剛完成「米克大叔家庭財務健康檢查」！\n財務健康分數：${r.scores.total}分 (${r.grade})\n安全天數：${Math.round(r.safe_days)}天\n被動收入覆蓋率：${fmtPct(r.passive_cov)}\n\n免費測驗你的財務健康👉 ${window.location.href}`;
+  if (platform === 'fb')
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}&quote=${encodeURIComponent(text)}`);
+  else if (platform === 'line')
+    window.open(`https://line.me/R/msg/text/?${encodeURIComponent(text)}`);
+}
+
+function copyResult() {
+  const r = results;
+  const text = `【米克大叔家庭財務健康檢查結果】\n財務健康分數：${r.scores.total}分 (${r.grade})\n安全天數：${Math.round(r.safe_days)}天\n被動收入覆蓋率：${fmtPct(r.passive_cov)}\n負債比：${fmtPct(r.debt_ratio)}\nFIRE進度：${fmtPct(r.fire_pct)}`;
+  navigator.clipboard.writeText(text).then(() => alert('結果已複製！'));
+}
+
+function trackClick(product) {
+  console.log('Product click:', product);
+  // 這裡可接 GA4 / Pixel 追蹤
+}
+</script>
+</body>
+</html>
