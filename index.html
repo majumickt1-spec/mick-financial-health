@@ -864,10 +864,11 @@ function submitEmail() {
   document.getElementById('mc-fname').value = name;
   // document.getElementById('mc-form').submit(); // uncomment when URL set
 
-  showReport();
+  showReport(true);
 }
 
-function showReport() {
+function showReport(unlocked = false) {
+  data.unlocked = unlocked;
   goStep(4);
   renderReport();
 }
@@ -1077,17 +1078,48 @@ function renderReport() {
     ]},
   };
   const plan = planConfig[gl] || planConfig['C'];
-  document.getElementById('action-plan').innerHTML = `
-    <div class="action-grade-header" style="background:${plan.color};">
-      ${plan.label} 的90天行動計畫
-    </div>
-    <div class="action-plan-body">
-      ${plan.items.map((item, i) => `
+  if (d.unlocked) {
+    document.getElementById('action-plan').innerHTML = `
+      <div class="action-grade-header" style="background:${plan.color};">
+        ${plan.label} 的90天行動計畫
+      </div>
+      <div class="action-plan-body">
+        ${plan.items.map((item, i) => `
+          <div class="action-item">
+            <div class="action-num" style="background:${item.c};color:#fff;">${i+1}</div>
+            <div class="action-text">${item.t}</div>
+          </div>`).join('')}
+      </div>`;
+  } else {
+    // 未解鎖：只顯示第1條，其餘鎖定
+    document.getElementById('action-plan').innerHTML = `
+      <div class="action-grade-header" style="background:${plan.color};">
+        ${plan.label} 的90天行動計畫
+      </div>
+      <div class="action-plan-body">
         <div class="action-item">
-          <div class="action-num" style="background:${item.c};color:#fff;">${i+1}</div>
-          <div class="action-text">${item.t}</div>
-        </div>`).join('')}
-    </div>`;
+          <div class="action-num" style="background:${plan.items[0].c};color:#fff;">1</div>
+          <div class="action-text">${plan.items[0].t}</div>
+        </div>
+        <div style="position:relative;margin-top:8px;">
+          <div style="filter:blur(4px);pointer-events:none;opacity:0.4;">
+            ${plan.items.slice(1).map((item, i) => `
+              <div class="action-item">
+                <div class="action-num" style="background:#ccc;color:#fff;">${i+2}</div>
+                <div class="action-text">${item.t}</div>
+              </div>`).join('')}
+          </div>
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;">
+            <div style="font-size:28px;">🔒</div>
+            <div style="font-size:13px;font-weight:700;color:#333;text-align:center;">還有 4 個行動步驟等你解鎖</div>
+            <button class="btn" style="margin-top:0;width:auto;padding:10px 20px;font-size:13px;"
+              onclick="goStep(3);window.scrollTo(0,0)">
+              輸入 Email 解鎖完整計畫 →
+            </button>
+          </div>
+        </div>
+      </div>`;
+  }
 
   // Show funnel
   document.getElementById('funnel').style.display = 'block';
