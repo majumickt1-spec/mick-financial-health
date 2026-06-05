@@ -440,6 +440,39 @@
   .tag-safe { display: inline-block; background: var(--green); color: #fff; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; }
   .tag-warn { display: inline-block; background: var(--yellow); color: #fff; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; }
   .tag-risk { display: inline-block; background: var(--red); color: #fff; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 700; }
+
+  /* ── SCORE FORMULA TABLE ── */
+  .score-formula-table { margin: 0 0 16px; border-radius: 10px; overflow: hidden; border: 1px solid #eee; }
+  .sf-row { display: grid; grid-template-columns: 1fr 70px 70px; padding: 10px 14px; font-size: 13px; border-bottom: 1px solid #f0f0f0; align-items: center; }
+  .sf-row:last-child { border-bottom: none; }
+  .sf-row span:last-child { text-align: right; font-weight: 700; }
+  .sf-row span:nth-child(2) { text-align: center; color: #888; font-size: 12px; }
+  .sf-header { background: #f5f5f5; font-weight: 700; font-size: 12px; color: #666; }
+  .sf-total { background: var(--black); color: var(--gold2) !important; font-weight: 900; }
+  .sf-total span { color: var(--gold2) !important; }
+
+  /* ── AGE COMPARE ── */
+  .age-compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  @media(max-width:480px){ .age-compare-grid { grid-template-columns: 1fr; } }
+  .ac-box { border-radius: 10px; padding: 14px; border: 1px solid #eee; background: #fafafa; }
+  .ac-box .ac-label { font-size: 12px; color: #888; margin-bottom: 6px; }
+  .ac-box .ac-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; font-size: 13px; }
+  .ac-box .ac-row .ac-key { color: #555; }
+  .ac-box .ac-row .ac-you { font-weight: 700; color: var(--black); }
+  .ac-box .ac-row .ac-avg { color: #aaa; font-size: 11px; }
+  .ac-tag-up   { background: var(--green);  color:#fff; border-radius:4px; padding:1px 7px; font-size:11px; font-weight:700; }
+  .ac-tag-mid  { background: var(--yellow); color:#fff; border-radius:4px; padding:1px 7px; font-size:11px; font-weight:700; }
+  .ac-tag-down { background: var(--red);    color:#fff; border-radius:4px; padding:1px 7px; font-size:11px; font-weight:700; }
+  .ac-summary { font-size: 13px; color: #444; background: var(--yel-bg); border-radius: 8px; padding: 12px 14px; margin-bottom: 4px; line-height: 1.6; }
+
+  /* ── ACTION PLAN ── */
+  .action-grade-header { border-radius: 10px 10px 0 0; padding: 14px 18px; font-size: 15px; font-weight: 800; color: #fff; }
+  .action-plan-body { border: 1px solid #eee; border-top: none; border-radius: 0 0 10px 10px; padding: 16px 18px; margin-bottom: 16px; }
+  .action-item { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid #f5f5f5; align-items: flex-start; }
+  .action-item:last-child { border-bottom: none; }
+  .action-num { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; flex-shrink: 0; }
+  .action-text { font-size: 13px; line-height: 1.6; color: #333; }
+  .action-text strong { color: var(--black); }
 </style>
 </head>
 <body>
@@ -504,6 +537,11 @@
         <label>💳 總負債（元）</label>
         <span class="hint">房貸+車貸+信貸+信用卡</span>
         <input type="number" id="total_liabilities" placeholder="例：5600000" min="0">
+      </div>
+      <div class="field" style="grid-column:1/-1;">
+        <label>🎂 你的年齡（歲）</label>
+        <span class="hint">用於同年齡財務比較，了解你在同齡人中的位置</span>
+        <input type="number" id="user_age" placeholder="例：42" min="20" max="70">
       </div>
     </div>
     <p id="form-error" style="color:var(--red);font-size:13px;margin-top:12px;display:none;">⚠️ 請填入所有欄位（可填 0）</p>
@@ -573,8 +611,21 @@
       <!-- filled by JS -->
     </div>
 
-    <div class="section-title" style="margin-top:8px;">📈 評分明細</div>
-    <div class="score-breakdown" id="score-breakdown">
+    <div class="section-title" style="margin-top:8px;">📈 評分公式說明</div>
+    <div class="score-formula-table">
+      <div class="sf-row sf-header">
+        <span>評分項目</span><span>權重</span><span>你的得分</span>
+      </div>
+      <div class="sf-row" id="sf-safe"><span>🛡️ 安全天數</span><span>30分</span><span id="sf-safe-score">-</span></div>
+      <div class="sf-row" id="sf-passive"><span>🌊 被動收入覆蓋率</span><span>30分</span><span id="sf-passive-score">-</span></div>
+      <div class="sf-row" id="sf-debt"><span>💳 淨資產／負債比</span><span>20分</span><span id="sf-debt-score">-</span></div>
+      <div class="sf-row" id="sf-cf"><span>💰 月現金流</span><span>20分</span><span id="sf-cf-score">-</span></div>
+      <div class="sf-row sf-total"><span>總分</span><span>100分</span><span id="sf-total-score">-</span></div>
+    </div>
+    <div class="score-breakdown" id="score-breakdown"></div>
+
+    <div class="section-title" style="margin-top:8px;">👥 同年齡財務比較</div>
+    <div id="age-compare">
       <!-- filled by JS -->
     </div>
 
@@ -583,8 +634,8 @@
       <!-- filled by JS -->
     </div>
 
-    <div class="section-title" style="margin-top:8px;">🚀 未來90天優先任務</div>
-    <div class="task-list" id="task-list">
+    <div class="section-title" style="margin-top:8px;">🚀 90天行動計畫</div>
+    <div id="action-plan">
       <!-- filled by JS -->
     </div>
 
@@ -670,34 +721,61 @@
 let data = {};
 let results = {};
 
-// ── 計算邏輯 ──
-function calculate(d) {
-  const cashflow    = (d.income_active + d.income_passive) - d.expense_total;
-  const savings_rate = d.expense_total > 0 ? cashflow / (d.income_active + d.income_passive) : 0;
-  const safe_days   = d.expense_total > 0 ? (d.emergency_fund / (d.expense_total / 30)) : 0;
-  const passive_cov = d.expense_total > 0 ? d.income_passive / d.expense_total : 0;
-  const debt_ratio  = d.total_assets > 0   ? d.total_liabilities / d.total_assets : 1;
-  const net_worth   = d.total_assets - d.total_liabilities;
-  const fire_target = d.expense_total * 12 * 25;
-  const fire_pct    = fire_target > 0 ? Math.max(net_worth, 0) / fire_target : 0;
+// ── 年齡基準（米克大叔定義的台灣上班族參考值）──
+const AGE_BENCHMARKS = {
+  // [安全天數, 被動收入覆蓋率, 淨資產(萬), 月儲蓄率]
+  '<35':  { safe: 30,  passive: 0.05, net: 50,   savings: 0.10, label: '35歲以下' },
+  '35-45':{ safe: 45,  passive: 0.15, net: 200,  savings: 0.15, label: '35-45歲' },
+  '45-55':{ safe: 60,  passive: 0.25, net: 500,  savings: 0.15, label: '45-55歲' },
+  '55+':  { safe: 90,  passive: 0.40, net: 1000, savings: 0.20, label: '55歲以上' },
+};
+function getAgeBenchmark(age) {
+  if (!age || age < 20) return null;
+  if (age < 35) return AGE_BENCHMARKS['<35'];
+  if (age < 45) return AGE_BENCHMARKS['35-45'];
+  if (age < 55) return AGE_BENCHMARKS['45-55'];
+  return AGE_BENCHMARKS['55+'];
+}
 
-  // 評分（共100分）
-  let s_cashflow = cashflow > 0 ? 20 : (cashflow > -3000 ? 10 : 0);
-  let s_safe     = safe_days >= 90 ? 20 : (safe_days >= 30 ? 12 : 0);
-  let s_savings  = savings_rate >= 0.2 ? 15 : (savings_rate >= 0.1 ? 8 : 0);
-  let s_debt     = debt_ratio <= 0.5 ? 20 : (debt_ratio <= 0.7 ? 12 : 0);
-  let s_passive  = passive_cov >= 0.5 ? 25 : (passive_cov >= 0.25 ? 15 : (passive_cov > 0 ? 8 : 0));
-  let total = s_cashflow + s_safe + s_savings + s_debt + s_passive;
+// ── 計算邏輯（4項，共100分）──
+// 安全天數 30 | 被動收入 30 | 淨資產/負債比 20 | 月現金流 20
+function calculate(d) {
+  const cashflow     = (d.income_active + d.income_passive) - d.expense_total;
+  const total_income = d.income_active + d.income_passive;
+  const savings_rate = total_income > 0 ? cashflow / total_income : 0;
+  const safe_days    = d.expense_total > 0 ? (d.emergency_fund / (d.expense_total / 30)) : 0;
+  const passive_cov  = d.expense_total > 0 ? d.income_passive / d.expense_total : 0;
+  const debt_ratio   = d.total_assets > 0  ? d.total_liabilities / d.total_assets : 1;
+  const net_worth    = d.total_assets - d.total_liabilities;
+  const fire_target  = d.expense_total * 12 * 25;
+  const fire_pct     = fire_target > 0 ? Math.max(net_worth, 0) / fire_target : 0;
+
+  // 安全天數 (30分)
+  const s_safe = safe_days >= 180 ? 30 : safe_days >= 90 ? 22 : safe_days >= 30 ? 12 : 0;
+  // 被動收入覆蓋率 (30分)
+  const s_passive = passive_cov >= 0.5 ? 30 : passive_cov >= 0.25 ? 18 : passive_cov > 0 ? 8 : 0;
+  // 淨資產/負債比 (20分)
+  const s_debt = debt_ratio <= 0.3 ? 20 : debt_ratio <= 0.5 ? 16 : debt_ratio <= 0.7 ? 10 : 0;
+  // 月現金流 (20分)
+  const s_cf = cashflow > 0 && savings_rate >= 0.2 ? 20
+             : cashflow > 0 && savings_rate >= 0.1 ? 14
+             : cashflow > 0 ? 8 : 0;
+
+  const total = s_safe + s_passive + s_debt + s_cf;
 
   const grade = total >= 90 ? 'A+ 🏆' : total >= 80 ? 'A 🟢' :
                 total >= 70 ? 'B+ 🟢' : total >= 60 ? 'B 🟡' :
                 total >= 50 ? 'C+ 🟡' : total >= 40 ? 'C 🔴' : 'D 🔴';
 
+  // 純等級字母（A+/A/B+/B/C+/C/D）
+  const gradeLetter = total >= 90 ? 'A+' : total >= 80 ? 'A' :
+                      total >= 70 ? 'B+' : total >= 60 ? 'B' :
+                      total >= 50 ? 'C+' : total >= 40 ? 'C' : 'D';
+
   return { cashflow, savings_rate, safe_days, passive_cov, debt_ratio,
            net_worth, fire_target, fire_pct,
-           scores: { cashflow: s_cashflow, safe: s_safe, savings: s_savings,
-                     debt: s_debt, passive: s_passive, total },
-           grade };
+           scores: { safe: s_safe, passive: s_passive, debt: s_debt, cf: s_cf, total },
+           grade, gradeLetter };
 }
 
 function fmtMoney(n) {
@@ -730,6 +808,7 @@ function startAnalysis() {
     emergency_fund:   +document.getElementById('emergency_fund').value,
     total_assets:     +document.getElementById('total_assets').value,
     total_liabilities:+document.getElementById('total_liabilities').value,
+    age:              +document.getElementById('user_age').value || 0,
   };
   results = calculate(data);
 
@@ -807,10 +886,10 @@ function renderReport() {
       `FIRE 財務自由進度：${fmtPct(r.fire_pct)}（目標：${fmtMoney(r.fire_target)}元）`;
   }, 500);
 
-  // Metric grid
+  // ── 五大指標格 ──
   const metrics = [
     { label: '🛡️ 安全天數', value: fmtDays(r.safe_days),
-      status: r.safe_days >= 90 ? '相對安全' : r.safe_days >= 30 ? '需要加強' : '⚠️ 高度危險',
+      status: r.safe_days >= 180 ? '非常充足' : r.safe_days >= 90 ? '相對安全' : r.safe_days >= 30 ? '需要加強' : '⚠️ 高度危險',
       cls: r.safe_days >= 90 ? 'green' : r.safe_days >= 30 ? 'yellow' : 'red' },
     { label: '🌊 被動收入覆蓋率', value: fmtPct(r.passive_cov),
       status: r.passive_cov >= 0.5 ? '快車道進行中' : r.passive_cov >= 0.25 ? '繼續加強' : '亟需建立',
@@ -825,60 +904,111 @@ function renderReport() {
       status: r.savings_rate >= 0.2 ? '達標' : r.savings_rate >= 0.1 ? '待加強' : '過低',
       cls: r.savings_rate >= 0.2 ? 'green' : r.savings_rate >= 0.1 ? 'yellow' : 'red' },
   ];
-  const grid = document.getElementById('metric-grid');
-  grid.innerHTML = metrics.map(m => `
+  document.getElementById('metric-grid').innerHTML = metrics.map(m => `
     <div class="metric-box ${m.cls}">
       <div class="m-label">${m.label}</div>
       <div class="m-value">${m.value}</div>
       <div class="m-status">${m.status}</div>
     </div>`).join('');
 
-  // Score breakdown
-  const breakdown = [
-    { label: '月現金流', score: r.scores.cashflow, max: 20 },
-    { label: '安全天數', score: r.scores.safe,     max: 20 },
-    { label: '儲蓄率',  score: r.scores.savings,   max: 15 },
-    { label: '負債比',  score: r.scores.debt,       max: 20 },
-    { label: '被動收入',score: r.scores.passive,    max: 25 },
+  // ── 優化1：評分公式表 ──
+  const scoreItems = [
+    { id: 'safe',    score: r.scores.safe,    max: 30 },
+    { id: 'passive', score: r.scores.passive, max: 30 },
+    { id: 'debt',    score: r.scores.debt,    max: 20 },
+    { id: 'cf',      score: r.scores.cf,      max: 20 },
   ];
-  const sbEl = document.getElementById('score-breakdown');
-  sbEl.innerHTML = breakdown.map(b => {
-    const pct = b.max > 0 ? (b.score / b.max * 100) : 0;
+  scoreItems.forEach(s => {
+    const el = document.getElementById(`sf-${s.id}-score`);
+    if (el) {
+      const pct = s.score / s.max;
+      el.textContent = `${s.score}分`;
+      el.style.color = pct >= 0.7 ? 'var(--green)' : pct >= 0.4 ? 'var(--yellow)' : 'var(--red)';
+    }
+  });
+  const totalEl = document.getElementById('sf-total-score');
+  if (totalEl) totalEl.textContent = `${r.scores.total}分`;
+
+  // bar chart (視覺輔助)
+  document.getElementById('score-breakdown').innerHTML = scoreItems.map(s => {
+    const pct = s.max > 0 ? (s.score / s.max * 100) : 0;
     const cls = pct >= 70 ? 'grn-bar' : pct >= 40 ? 'yel-bar' : 'red-bar';
+    const labels = { safe:'安全天數', passive:'被動收入', debt:'淨資產/負債比', cf:'月現金流' };
     return `<div class="breakdown-row">
-      <div class="b-label">${b.label}</div>
+      <div class="b-label">${labels[s.id]}</div>
       <div class="b-bar-wrap"><div class="b-bar ${cls}" style="width:${pct}%"></div></div>
-      <div class="b-score">${b.score}/${b.max}</div>
+      <div class="b-score">${s.score}/${s.max}</div>
     </div>`;
   }).join('');
 
-  // Diag
+  // ── 優化2：同年齡比較 ──
+  const bm = getAgeBenchmark(d.age);
+  const ageEl = document.getElementById('age-compare');
+  if (bm && d.age) {
+    const cmpRows = [
+      { key: '安全天數', you: Math.round(r.safe_days), avg: bm.safe, fmt: v => v + '天',
+        up: r.safe_days >= bm.safe * 1.2, down: r.safe_days < bm.safe * 0.8 },
+      { key: '被動收入覆蓋率', you: (r.passive_cov*100).toFixed(1)+'%', avg: (bm.passive*100).toFixed(0)+'%', fmt: v => v,
+        up: r.passive_cov >= bm.passive * 1.2, down: r.passive_cov < bm.passive * 0.8 },
+      { key: '淨資產', you: fmtMoney(r.net_worth)+'元', avg: bm.net+'萬元', fmt: v => v,
+        up: r.net_worth >= bm.net * 10000 * 1.2, down: r.net_worth < bm.net * 10000 * 0.8 },
+      { key: '月儲蓄率', you: (r.savings_rate*100).toFixed(1)+'%', avg: (bm.savings*100).toFixed(0)+'%', fmt: v => v,
+        up: r.savings_rate >= bm.savings * 1.2, down: r.savings_rate < bm.savings * 0.8 },
+    ];
+    const upCount = cmpRows.filter(c => c.up).length;
+    const summary = upCount >= 3
+      ? `你在${bm.label}族群中屬於<strong>財務優等生</strong>，各項指標明顯優於同齡平均，繼續保持！`
+      : upCount >= 2
+      ? `你的財務狀況與${bm.label}平均水準相當，有2項指標表現突出，繼續加油！`
+      : `你目前部分指標低於${bm.label}平均水準，這是正常的——現在開始行動，就能追上並超越！`;
+
+    ageEl.innerHTML = `
+      <div class="ac-summary">📊 與<strong>${bm.label}（${d.age}歲）</strong>同齡比較：${summary}</div>
+      <div class="age-compare-grid">
+        ${cmpRows.map(c => `
+          <div class="ac-box">
+            <div class="ac-label">${c.key}</div>
+            <div class="ac-row">
+              <span class="ac-key">你的數值</span>
+              <span class="ac-you">${c.you}</span>
+            </div>
+            <div class="ac-row">
+              <span class="ac-key">同齡參考</span>
+              <span class="ac-avg">${c.avg}</span>
+            </div>
+            <div style="margin-top:6px;">
+              ${c.up ? '<span class="ac-tag-up">🟢 高於平均</span>' : c.down ? '<span class="ac-tag-down">🔴 低於平均</span>' : '<span class="ac-tag-mid">🟡 接近平均</span>'}
+            </div>
+          </div>`).join('')}
+      </div>`;
+  } else {
+    ageEl.innerHTML = `<p style="font-size:13px;color:#aaa;padding:12px 0;">（未填入年齡，無法進行同年齡比較）</p>`;
+  }
+
+  // ── 診斷 ──
   const diags = [];
   if (r.cashflow < 0)
-    diags.push({ icon: '🔴', title: '月現金流為負', desc: `每月支出超出收入 ${fmtMoney(Math.abs(r.cashflow))}元，資產正在被消耗。這是最緊急的財務警訊，必須立刻削減支出。` });
+    diags.push({ icon:'🔴', title:'月現金流為負', desc:`每月支出超出收入 ${fmtMoney(Math.abs(r.cashflow))}元，資產正在被消耗，這是最緊急的財務警訊，必須立刻削減支出。` });
   else
-    diags.push({ icon: '✅', title: '月現金流為正', desc: `每月結餘 ${fmtMoney(r.cashflow)}元，繼續維持並將結餘投入資產配置。` });
-
+    diags.push({ icon:'✅', title:'月現金流為正', desc:`每月結餘 ${fmtMoney(r.cashflow)}元，繼續維持並將結餘投入資產配置。` });
   if (r.safe_days < 30)
-    diags.push({ icon: '🔴', title: `安全天數嚴重不足（${fmtDays(r.safe_days)}）`, desc: `緊急預備金僅能支撐${Math.round(r.safe_days)}天，建議停止非必要投資，優先累積30天預備金（目標：${fmtMoney(data.expense_total)}元）。` });
+    diags.push({ icon:'🔴', title:`安全天數嚴重不足（${fmtDays(r.safe_days)}）`, desc:`緊急預備金僅能支撐${Math.round(r.safe_days)}天，建議優先累積30天預備金（目標：${fmtMoney(d.expense_total)}元）。` });
   else if (r.safe_days < 90)
-    diags.push({ icon: '🟡', title: `安全天數待加強（${fmtDays(r.safe_days)}）`, desc: `已有初步緩衝，建議在12個月內達到90天以上（目標：${fmtMoney(data.expense_total * 3)}元）。` });
+    diags.push({ icon:'🟡', title:`安全天數待加強（${fmtDays(r.safe_days)}）`, desc:`已有初步緩衝，建議在12個月內達到90天以上（目標：${fmtMoney(d.expense_total * 3)}元）。` });
   else
-    diags.push({ icon: '✅', title: `安全天數充足（${fmtDays(r.safe_days)}）`, desc: '緊急預備金充足，家庭財務具備基本韌性。' });
-
+    diags.push({ icon:'✅', title:`安全天數充足（${fmtDays(r.safe_days)}）`, desc:'緊急預備金充足，家庭財務具備基本韌性。' });
   if (r.debt_ratio > 0.7)
-    diags.push({ icon: '🔴', title: `負債比過高（${fmtPct(r.debt_ratio)}）`, desc: '負債占資產超過70%，財務槓桿風險極高。建議優先清償高利率消費型負債（信用卡/信用貸款）。' });
+    diags.push({ icon:'🔴', title:`負債比過高（${fmtPct(r.debt_ratio)}）`, desc:'負債占資產超過70%，建議優先清償高利率消費型負債（信用卡/信用貸款）。' });
   else if (r.debt_ratio > 0.5)
-    diags.push({ icon: '🟡', title: `負債比偏高（${fmtPct(r.debt_ratio)}）`, desc: '負債比在50-70%，屬需注意區間。建議避免新增消費性負債，確保現金流為正。' });
+    diags.push({ icon:'🟡', title:`負債比偏高（${fmtPct(r.debt_ratio)}）`, desc:'負債比在50-70%，建議避免新增消費性負債，確保現金流為正。' });
   else
-    diags.push({ icon: '✅', title: `負債比健康（${fmtPct(r.debt_ratio)}）`, desc: '負債結構健康，繼續維持，避免新增非必要負債。' });
-
+    diags.push({ icon:'✅', title:`負債比健康（${fmtPct(r.debt_ratio)}）`, desc:'負債結構健康，繼續維持。' });
   if (r.passive_cov < 0.25)
-    diags.push({ icon: '🔴', title: `被動收入嚴重不足（${fmtPct(r.passive_cov)}）`, desc: '被動收入幾乎為零，完全依賴主動收入。建議從每月定期投資ETF開始，逐步建立股息型被動收入。' });
+    diags.push({ icon:'🔴', title:`被動收入嚴重不足（${fmtPct(r.passive_cov)}）`, desc:'被動收入幾乎為零，建議從每月定期投資ETF開始，逐步建立股息型被動收入。' });
   else if (r.passive_cov < 0.5)
-    diags.push({ icon: '🟡', title: `被動收入需要加強（${fmtPct(r.passive_cov)}）`, desc: `被動收入已有起步，但仍不足支出一半。建議加速ETF定期定額，目標覆蓋所有固定支出。` });
+    diags.push({ icon:'🟡', title:`被動收入需要加強（${fmtPct(r.passive_cov)}）`, desc:'被動收入已有起步，但仍不足支出一半，建議加速ETF定期定額。' });
   else
-    diags.push({ icon: '✅', title: `被動收入達標（${fmtPct(r.passive_cov)}）`, desc: '被動收入已超過支出50%，正在快車道上，繼續加強！' });
+    diags.push({ icon:'✅', title:`被動收入達標（${fmtPct(r.passive_cov)}）`, desc:'被動收入已超過支出50%，正在快車道上，繼續加強！' });
 
   document.getElementById('diag-list').innerHTML = diags.map(dg =>
     `<div class="diag-row">
@@ -889,33 +1019,71 @@ function renderReport() {
       </div>
     </div>`).join('');
 
-  // Tasks
-  const tasks = [];
-  if (r.cashflow < 0)
-    tasks.push({ cls: 't1', text: `① 🔴 每月現金流為負，立刻審視並削減每月支出，目標讓結餘 > 0` });
-  else if (r.safe_days < 30)
-    tasks.push({ cls: 't1', text: `① 🔴 安全天數僅${Math.round(r.safe_days)}天，優先累積1個月緊急預備金（目標：${fmtMoney(data.expense_total)}元）` });
-  else if (r.debt_ratio > 0.7)
-    tasks.push({ cls: 't1', text: `① 🔴 負債比${fmtPct(r.debt_ratio)}過高，優先清償高利率消費型負債（信用卡/信用貸款）` });
-  else
-    tasks.push({ cls: 't1', text: `① ✅ 現金流基礎穩定，持續維持正現金流並擴大儲蓄` });
-
-  if (r.safe_days < 90)
-    tasks.push({ cls: 't2', text: `② 建立90天緊急預備金（目標：${fmtMoney(data.expense_total * 3)}元），每月至少存入 ${fmtMoney(data.expense_total * 0.1)}元` });
-  else if (r.savings_rate < 0.2)
-    tasks.push({ cls: 't2', text: `② 提升儲蓄率至20%以上（每月至少 ${fmtMoney((data.income_active + data.income_passive) * 0.2)}元），執行「先儲蓄後消費」` });
-  else
-    tasks.push({ cls: 't2', text: `② ✅ 緊急預備金充足，將多餘現金流轉入投資帳戶加速資產累積` });
-
-  if (r.passive_cov < 0.25)
-    tasks.push({ cls: 't3', text: `③ 被動收入近乎為零，立刻開始ETF定期定額，建議每月投入 ${fmtMoney(Math.max(data.expense_total * 0.1, 3000))}元以上` });
-  else if (r.passive_cov < 0.5)
-    tasks.push({ cls: 't3', text: `③ 被動收入仍不足支出50%，加速ETF定期定額，目標覆蓋所有固定支出` });
-  else
-    tasks.push({ cls: 't3', text: `③ 🟢 被動收入達標！追蹤FIRE進度（目前${fmtPct(r.fire_pct)}），繼續向財務自由邁進` });
-
-  document.getElementById('task-list').innerHTML =
-    tasks.map(t => `<div class="task-item ${t.cls}">${t.text}</div>`).join('');
+  // ── 優化3：等級專屬90天行動計畫 ──
+  const gl = r.gradeLetter;
+  const planConfig = {
+    'A+': { color:'#1B5E20', bg:'#E8F5E9', label:'A+ 🏆 優秀', items:[
+      { c:'#1B5E20', t:'持續增加ETF定期定額，加速接近FIRE目標' },
+      { c:'#1B5E20', t:'建立第二被動收入管道（數位產品、版稅、股息組合）' },
+      { c:'#1B5E20', t:'規劃遺產與資產傳承架構，完善家庭財務防護' },
+      { c:'#1B5E20', t:`追蹤FIRE進度，目前完成${fmtPct(r.fire_pct)}，計算預計達成年份` },
+      { c:'#1B5E20', t:'分享你的財務成果，鼓勵家人一起建立財務系統' },
+    ]},
+    'A': { color:'#1B5E20', bg:'#E8F5E9', label:'A 🟢 良好', items:[
+      { c:'#1B5E20', t:`將安全天數從${Math.round(r.safe_days)}天提升至180天，建立更厚實的財務緩衝` },
+      { c:'#1B5E20', t:'加速ETF投資，目標讓被動收入覆蓋率達到50%以上' },
+      { c:'#1B5E20', t:'建立第二收入來源（副業、數位資產、諮詢服務）' },
+      { c:'#1B5E20', t:'優化稅務規劃，確保每一元投資都有最佳稅後報酬' },
+      { c:'#1B5E20', t:'每季檢視資產負債表，確保各項指標持續改善' },
+    ]},
+    'B+': { color:'#1A237E', bg:'#E8EAF6', label:'B+ 🟢 中上', items:[
+      { c:'#1A237E', t:`目標在12個月內將安全天數達到90天（需累積：${fmtMoney(d.expense_total * 3)}元）` },
+      { c:'#1A237E', t:`提升被動收入覆蓋率，目標達到25%（每月被動收入需達：${fmtMoney(d.expense_total * 0.25)}元）` },
+      { c:'#1A237E', t:'執行「先儲蓄後消費」，每月薪資入帳先轉出20%至投資帳戶' },
+      { c:'#1A237E', t:'制定負債清償計畫，優先清除高利率信用卡債與信用貸款' },
+      { c:'#1A237E', t:'開始學習ETF投資，每月定期定額至少 ' + fmtMoney(Math.max(d.expense_total * 0.1, 5000)) + '元' },
+    ]},
+    'B': { color:'#E65100', bg:'#FFF3E0', label:'B 🟡 普通', items:[
+      { c:'#E65100', t:`優先建立30天緊急預備金（目標：${fmtMoney(d.expense_total)}元），設立專用緊急備用帳戶` },
+      { c:'#E65100', t:'削減每月非必要支出（外食/娛樂/訂閱服務），目標每月多存5,000元以上' },
+      { c:'#E65100', t:'制定消費型負債清償順序（利率高→低），每月額外還款最少5,000元' },
+      { c:'#E65100', t:'設定每月自動轉帳至儲蓄帳戶，金額至少為月收入的10%' },
+      { c:'#E65100', t:'參加現金流桌遊體驗課，建立正確的資產/負債思維框架' },
+    ]},
+    'C+': { color:'#BF360C', bg:'#FBE9E7', label:'C+ 🟡 待改善', items:[
+      { c:'#BF360C', t:'立刻停止所有非必要消費，建立每月收支紀錄（用 Excel 或記帳 App）' },
+      { c:'#BF360C', t:`本月目標：建立1個月緊急預備金（${fmtMoney(d.expense_total)}元）` },
+      { c:'#BF360C', t:'停止新增任何消費型負債（信用卡/分期/信貸），優先清除最高利率的負債' },
+      { c:'#BF360C', t:'找出每月至少可以節省3,000-5,000元的支出項目，持續執行' },
+      { c:'#BF360C', t:'與家人討論財務狀況，制定共同的財務改善計畫' },
+    ]},
+    'C': { color:'#B71C1C', bg:'#FFEBEE', label:'C 🔴 需要行動', items:[
+      { c:'#B71C1C', t:'本週行動：列出所有負債清單（金額＋利率），制定最低還款計畫' },
+      { c:'#B71C1C', t:'建立家庭資產負債表，搞清楚每一分錢的去向' },
+      { c:'#B71C1C', t:'削減非必要支出，目標讓每月現金流轉正（收入＞支出）' },
+      { c:'#B71C1C', t:'尋找增加收入的機會（兼職/副業/技能提升），增加主動收入' },
+      { c:'#B71C1C', t:'尋求財務顧問協助或參加財務訓練課程，加速扭轉局面' },
+    ]},
+    'D': { color:'#7B1FA2', bg:'#F3E5F5', label:'D 🔴 緊急', items:[
+      { c:'#7B1FA2', t:'🚨 緊急：本週聯繫所有債權人，協商還款計畫，避免逾期罰款' },
+      { c:'#7B1FA2', t:'立刻停止使用信用卡，改用現金/借記卡管控支出' },
+      { c:'#7B1FA2', t:'建立最低生活支出清單，削減所有非必要開銷至最低限度' },
+      { c:'#7B1FA2', t:'尋找任何可增加收入的機會（加班/兼職/出售閒置物品）' },
+      { c:'#7B1FA2', t:'參加免費財務教育課程，建立正確財務觀念，這是改變的第一步' },
+    ]},
+  };
+  const plan = planConfig[gl] || planConfig['C'];
+  document.getElementById('action-plan').innerHTML = `
+    <div class="action-grade-header" style="background:${plan.color};">
+      ${plan.label} 的90天行動計畫
+    </div>
+    <div class="action-plan-body">
+      ${plan.items.map((item, i) => `
+        <div class="action-item">
+          <div class="action-num" style="background:${item.c};color:#fff;">${i+1}</div>
+          <div class="action-text">${item.t}</div>
+        </div>`).join('')}
+    </div>`;
 
   // Show funnel
   document.getElementById('funnel').style.display = 'block';
