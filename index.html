@@ -560,7 +560,7 @@
 <div id="step-unlock" class="card">
   <div class="card-header">
     <h2>🎯 分析完成！</h2>
-    <p>你的財務健康分數已計算完成，留下 Email 解鎖完整報告</p>
+    <p>你的財務健康分數已計算完成，留下資料解鎖完整報告</p>
   </div>
   <div class="card-body">
     <div class="score-blur">
@@ -571,20 +571,35 @@
 
     <div class="unlock-msg">
       <h3>🔓 解鎖你的完整財務診斷報告</h3>
-      <p>輸入暱稱與 Email，立刻獲得：<br>
+      <p>填寫以下資料，立刻獲得：<br>
         ✅ 5大指標完整燈號分析<br>
         ✅ 同年齡財務比較<br>
         ✅ 專屬90天行動計畫<br>
         ✅ 米克大叔每週理財乾貨
       </p>
+
+      <!-- 系統偵測財務等級標籤 -->
+      <div id="grade-tag-box" style="margin:14px 0 10px;text-align:center;">
+        <span style="font-size:12px;color:#aaa;letter-spacing:1px;">系統自動偵測你的財務等級</span><br>
+        <span id="grade-tag" style="display:inline-block;margin-top:6px;padding:7px 22px;border-radius:20px;font-size:14px;font-weight:700;letter-spacing:1px;"></span>
+      </div>
+
       <div class="email-form">
-        <input type="text" id="user-name" placeholder="你的朋友怎麼稱呼你？（例：小明、阿志）"
+        <!-- 姓名 -->
+        <input type="text" id="user-name"
+          placeholder="你的朋友怎麼稱呼你？（例：小明、阿志）"
           style="width:100%;border:2px solid #333;border-radius:8px;padding:12px 14px;font-size:14px;font-family:inherit;background:#1a1a2e;color:#fff;margin-bottom:10px;">
-        <div class="email-row">
-          <input type="email" id="user-email" placeholder="輸入你的 Email">
-          <button class="btn" style="margin-top:0;width:auto;padding:12px 18px;font-size:14px;" onclick="submitEmail()">解鎖報告 →</button>
-        </div>
-        <p id="unlock-error" style="color:#ff6b6b;font-size:12px;margin-top:6px;display:none;">⚠️ 請填入暱稱與有效的 Email</p>
+        <!-- Email -->
+        <input type="email" id="user-email"
+          placeholder="輸入你的 Email"
+          style="width:100%;border:2px solid #333;border-radius:8px;padding:12px 14px;font-size:14px;font-family:inherit;background:#1a1a2e;color:#fff;margin-bottom:10px;">
+        <!-- 年齡 -->
+        <input type="number" id="user-age"
+          placeholder="你的年齡（例：38）" min="18" max="80"
+          style="width:100%;border:2px solid #333;border-radius:8px;padding:12px 14px;font-size:14px;font-family:inherit;background:#1a1a2e;color:#fff;margin-bottom:10px;">
+        <!-- 解鎖按鈕 -->
+        <button class="btn" style="width:100%;font-size:15px;padding:14px;margin-top:4px;" onclick="submitEmail()">🔓 解鎖完整報告 →</button>
+        <p id="unlock-error" style="color:#ff6b6b;font-size:12px;margin-top:6px;display:none;">⚠️ 請填入姓名、Email 與年齡</p>
         <p class="privacy">🔒 不會發送垃圾信 · 隨時可取消訂閱</p>
       </div>
     </div>
@@ -709,8 +724,11 @@
 
 <!-- Hidden Mailchimp form -->
 <form id="mc-form" action="https://YOUR-MAILCHIMP-ACTION-URL" method="post" target="_blank" style="display:none;">
-  <input type="email" name="EMAIL" id="mc-email">
-  <input type="text" name="FNAME" id="mc-fname" value="財務健康測驗用戶">
+  <input type="email" name="EMAIL"   id="mc-email">
+  <input type="text"  name="FNAME"   id="mc-fname">
+  <input type="text"  name="MMERGE2" id="mc-age">      <!-- 年齡 -->
+  <input type="text"  name="MMERGE3" id="mc-grade">    <!-- 財務等級 A/B/C/D -->
+  <input type="text"  name="MMERGE4" id="mc-score">    <!-- 總分 -->
   <!-- Replace ACTION URL with your Mailchimp form action URL -->
 </form>
 
@@ -842,27 +860,55 @@ function animateLoading() {
   }, 400);
 }
 
+// ── 財務等級對應（分眾行銷用）──
+function gradeSegment(score) {
+  if (score >= 80) return { code: 'A', text: 'A 級　財務穩健', bg: '#0d2b1a', color: '#2ECC71', border: '#27AE60' };
+  if (score >= 60) return { code: 'B', text: 'B 級　有待加強', bg: '#2a2400', color: '#F1C40F', border: '#F39C12' };
+  if (score >= 40) return { code: 'C', text: 'C 級　財務警示', bg: '#2d1200', color: '#E67E22', border: '#D35400' };
+  return                    { code: 'D', text: 'D 級　高度危險', bg: '#2d0000', color: '#E74C3C', border: '#C0392B' };
+}
+
 // ── Unlock step ──
 function prepareUnlock() {
-  document.getElementById('score-preview').textContent = results.scores.total;
+  const score = results.scores.total;
+  document.getElementById('score-preview').textContent = score;
   document.getElementById('grade-preview').textContent = results.grade;
+
+  // 預填年齡（從 Step1 帶入）
+  if (data.age) document.getElementById('user-age').value = data.age;
+
+  // 顯示財務等級標籤
+  const seg = gradeSegment(score);
+  const tag = document.getElementById('grade-tag');
+  tag.textContent = '你的財務等級：' + seg.text;
+  tag.style.background = seg.bg;
+  tag.style.color = seg.color;
+  tag.style.border = '1.5px solid ' + seg.border;
 }
 
 function submitEmail() {
   const name  = document.getElementById('user-name').value.trim();
   const email = document.getElementById('user-email').value.trim();
+  const age   = document.getElementById('user-age').value.trim();
   const errEl = document.getElementById('unlock-error');
-  if (!name || !email || !email.includes('@')) {
+
+  if (!name || !email || !email.includes('@') || !age) {
     errEl.style.display = 'block';
     return;
   }
   errEl.style.display = 'none';
   data.userName = name;
 
-  // Submit to Mailchimp
-  document.getElementById('mc-email').value = email;
-  document.getElementById('mc-fname').value = name;
-  // document.getElementById('mc-form').submit(); // uncomment when URL set
+  // 計算等級代碼
+  const seg = gradeSegment(results.scores.total);
+
+  // Submit to Mailchimp（4欄位分眾）
+  document.getElementById('mc-email').value  = email;
+  document.getElementById('mc-fname').value  = name;
+  document.getElementById('mc-age').value    = age;
+  document.getElementById('mc-grade').value  = seg.code;          // A / B / C / D
+  document.getElementById('mc-score').value  = results.scores.total;
+  // document.getElementById('mc-form').submit(); // uncomment when Mailchimp URL set
 
   showReport(true);
 }
