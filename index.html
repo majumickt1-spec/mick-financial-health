@@ -595,7 +595,7 @@
           style="width:100%;border:2px solid #333;border-radius:8px;padding:12px 14px;font-size:14px;font-family:inherit;background:#1a1a2e;color:#fff;margin-bottom:10px;">
         <!-- 年齡 -->
         <input type="number" id="user-age"
-          placeholder="你的年齡（例：38）" min="18" max="80"
+          placeholder="你的年齡（例：45）" min="18" max="80" autocomplete="off"
           style="width:100%;border:2px solid #333;border-radius:8px;padding:12px 14px;font-size:14px;font-family:inherit;background:#1a1a2e;color:#fff;margin-bottom:10px;">
         <!-- 解鎖按鈕 -->
         <button class="btn" style="width:100%;font-size:15px;padding:14px;margin-top:4px;" onclick="submitEmail()">🔓 解鎖完整報告 →</button>
@@ -875,7 +875,7 @@ function prepareUnlock() {
   document.getElementById('grade-preview').textContent = results.grade;
 
   // 預填年齡（從 Step1 帶入）
-  if (data.age) document.getElementById('user-age').value = data.age;
+  document.getElementById('user-age').value = data.age || '';
 
   // 顯示財務等級標籤
   const seg = gradeSegment(score);
