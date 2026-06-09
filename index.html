@@ -723,7 +723,7 @@
 </div>
 
 <!-- Hidden Mailchimp form -->
-<form id="mc-form" action="https://YOUR-MAILCHIMP-ACTION-URL" method="post" target="_blank" style="display:none;">
+<form id="mc-form" action="https://github.us6.list-manage.com/subscribe/post?u=ba717c06cb5b9f2dc660bfff5&amp;id=74102e0793" method="post" target="_blank" style="display:none;">
   <input type="email" name="EMAIL"   id="mc-email">
   <input type="text"  name="FNAME"   id="mc-fname">
   <input type="text"  name="MMERGE2" id="mc-age">      <!-- 年齡 -->
@@ -908,7 +908,7 @@ function submitEmail() {
   document.getElementById('mc-age').value    = age;
   document.getElementById('mc-grade').value  = seg.code;          // A / B / C / D
   document.getElementById('mc-score').value  = results.scores.total;
-  // document.getElementById('mc-form').submit(); // uncomment when Mailchimp URL set
+  document.getElementById('mc-form').submit();
 
   showReport(true);
 }
